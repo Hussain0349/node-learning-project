@@ -1,0 +1,19 @@
+{
+  "name": "nodelearning",
+  "version": "1.0.0",
+  "description": "**First Node project**",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hussain0349/node-learning-project.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Hussain0349/node-learning-project/issues"
+  },
+  "homepage": "https://github.com/Hussain0349/node-learning-project#readme"
+}
