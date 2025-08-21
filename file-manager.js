@@ -34,7 +34,7 @@ import chalk from 'chalk'
 
 // // // read content
 
-// fs.readFile('introduction.text','utf-8', (err,data)=>{
+// fs.readFile('introduction.txt','utf-8', (err,data)=>{
 //     if(err){
 //         console.log(`some error caught while reading the file ${err}`)
 //     }
