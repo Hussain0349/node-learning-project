@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/Hussain0349/node-learning-project/issues"
   },
-  "homepage": "https://github.com/Hussain0349/node-learning-project#readme"
+  "homepage": "https://github.com/Hussain0349/node-learning-project#readme",
+  "dependencies": {
+    "chalk": "^5.6.0"
+  }
 }
