@@ -25,6 +25,8 @@ let books = [
     }
 ];
 
+
+
 const generateNewId = (books) => {
     if(books.length > 0){
         return books.length + 1
@@ -33,6 +35,22 @@ const generateNewId = (books) => {
         return 1
     }
 };
+
+
+
+/**
+ * @route   GET /api/books
+ * @desc    Get all books
+ * @access  Public
+ */
+
+
+/**
+ * @route   GET /api/books/:id
+ * @desc    Get a single book by ID
+ * @param   {Number} id - Book ID
+ * @access  Public
+ */
 
 const validateBook = ({ title, author, year, genre }) => {
     const errors = [];
