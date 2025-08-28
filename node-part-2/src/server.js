@@ -25,12 +25,16 @@ app.use('/api/books',bookRoutes)
 
 
 
-const time = new Date().toISOString()
-app.use((req,res,next) => {
-    console.log(`${time} ${req.method} ${req.url}`)
-    next()
-}) 
-
+// const time = new Date().toISOString()
+// app.use((req,res,next) => {
+//     console.log(`${time} ${req.method} ${req.url}`)
+//     next()
+// }) 
+app.use((req, res, next) => {
+    const time = new Date().toISOString(); 
+    console.log(`${time} ${req.method} ${req.url}`);
+    next();
+});
 
 app.get('/',(req,res) => {
     res.status(200).send('Welcome to the Express Server! ')
