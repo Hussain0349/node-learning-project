@@ -1,8 +1,9 @@
 import express from 'express'
 import dotenv from 'dotenv'
 import reqLogger from './middleware/logger.js'
-import apiRoutes from './routes/api.js'
-import webRoutes from './routes/web.js'
+import apiRoutes from './route/api.js'
+import webRoutes from './route/web.js'
+import bookRoutes from './route/books.js'
 // because my .env is in root and index.js is in the /src
 dotenv.config({path:
   '../.env'
@@ -20,6 +21,7 @@ app.use((req, res, next) => {
 // routes
 app.use('/api',apiRoutes)
 app.use('/',webRoutes)
+app.use('/api/books',bookRoutes)
 
 
 
@@ -50,4 +52,3 @@ app.use((err, req, res, next) => {
 app.listen(PORT,(req,res) => {
     console.log(`server is running on ${PORT}`)
 })
-
