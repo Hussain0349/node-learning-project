@@ -6,7 +6,11 @@ const reqLogger = (req,res,next) => {
     res.on('finish', () => {
         const duration = Date.now() - currentTime
 
-        console.log(`${new Date()}  ${req.method} ${req.url} ${req.status} ${duration}`)
+        console.log(new Date())
+        console.log(req.method)
+        console.log(req.req.statusCode)
+        console.log(duration)
+
     })
     next()
 

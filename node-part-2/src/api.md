@@ -1,6 +1,6 @@
 # Base URL
 ```
-http://localhost:3000/api/books 
+http://localhost:3000/
 ```
 ## Validation Rules
 
