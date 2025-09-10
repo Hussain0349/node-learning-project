@@ -8,7 +8,7 @@ const reqLogger = (req,res,next) => {
 
         console.log(new Date())
         console.log(req.method)
-        console.log(req.req.statusCode)
+        console.log(req.statusCode)
         console.log(duration)
 
     })
