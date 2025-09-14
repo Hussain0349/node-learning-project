@@ -4,10 +4,16 @@ import reqLogger from './middleware/logger.js'
 import apiRoutes from './route/api.js'
 import webRoutes from './route/web.js'
 import bookRoutes from './route/books.js'
-// because my .env is in root and index.js is in the /src
-dotenv.config({path:
-  '../.env'
-})
+import {dbConnect,dbDisconnect} from './config/database.js'
+
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
 const PORT = process.env.PORT || 3000
 const app = express()
 
@@ -47,7 +53,9 @@ app.use((err, req, res, next) => {
 });
 
 
-
-app.listen(PORT,(req,res) => {
+dbConnect().then(() => {
+  app.listen(PORT,(req,res) => {
     console.log(`server is running on ${PORT}`)
 })
+})
+
