@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import reqLogger from './middleware/logger.js'
 import apiRoutes from './route/api.js'
 import webRoutes from './route/web.js'
+import userRoutes from './route/user.js'
 import bookRoutes from './route/books.js'
 import {dbConnect,dbDisconnect} from './config/database.js'
 import path from "path";
@@ -17,6 +18,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 const PORT = process.env.PORT || 3000
 const app = express()
 
+app.use(express.urlencoded({extended:true}))
 app.use(express.json())
 app.use(reqLogger)
 app.use((req, res, next) => {
@@ -25,10 +27,10 @@ app.use((req, res, next) => {
 });
 
 // routes
-app.use('/api',apiRoutes)
+app.use('/api/v1',apiRoutes)
 app.use('/',webRoutes)
-app.use('/api/books',bookRoutes)
-
+app.use('/api/v1/books',bookRoutes)
+app.use('/api/v1/user',userRoutes)
 
 
 app.use((req, res, next) => {
