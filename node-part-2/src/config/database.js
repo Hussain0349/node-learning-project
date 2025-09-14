@@ -1,5 +1,7 @@
 import mongoose, { disconnect } from "mongoose";
 
+
+
 const dbConnect = async () => {
 
     try {
@@ -13,6 +15,8 @@ const dbConnect = async () => {
     }
 }
 
+
+// to stop databse gracefully!
 const dbDisconnect = async () => {
     try {
 
