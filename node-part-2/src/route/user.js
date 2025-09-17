@@ -2,8 +2,8 @@ import express from 'express'
 const router = express.Router()
 import User from '../models/user.model.js'
 import bscrypt from 'bcrypt'
-// all user
 
+// all user
 router.get('/',async(req,res) => {
 
     try {
@@ -74,7 +74,7 @@ router.post('/',async (req,res) => {
     
         const addedUser = await User.create({
             username,
-            password,
+            password : endodedPassword,
             firstName,
             lastName,
             email
