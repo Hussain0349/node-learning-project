@@ -5,6 +5,10 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "db:migrate": "node node-part-2/src/script/migrate.js",
+     "db:seed": "node node-part-2/src/script/seed.js",
+    "db:drop": "node node-part-2/src/script/drop.js",
+    "db:reset": "npm run db:drop && npm run db:seed",
     "start": "/node-part-2/src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
