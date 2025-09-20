@@ -170,7 +170,7 @@ router.post('/',async(req,res) => {
     }
 })
 
-// update route
+// update book
 router.put('/:id',async(req,res) => {
     try {
 

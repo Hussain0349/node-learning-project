@@ -30,7 +30,7 @@ app.use((req, res, next) => {
 app.use('/api/v1',apiRoutes)
 app.use('/',webRoutes)
 app.use('/api/v1/books',bookRoutes)
-app.use('/api/v1/user',userRoutes)
+app.use('/api/v1/users',userRoutes)
 
 
 app.use((req, res, next) => {
@@ -61,3 +61,4 @@ dbConnect().then(() => {
 })
 })
 
+export default app
