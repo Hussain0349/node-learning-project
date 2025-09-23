@@ -58,6 +58,7 @@ get: /book.user/user:id (specific user books)
 
 ## user api routes
 
+
 ```
 post: /users (create user)
 get: /users (all user)
@@ -94,7 +95,7 @@ npm run db:drop
 
 - Query timeout / DB unavailable → 503 (Service Unavailable)
 
-- Duplicate key violation (E11000) → 409 (Conflict)
+```
 
 - Validation errors → 400 (Bad Request) with detailed messages
 
@@ -113,4 +114,7 @@ npm run db:drop
 ```
 git clone <repo-url>
 cd node-part-2
+
 ```
+```
+

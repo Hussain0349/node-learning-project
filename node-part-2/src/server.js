@@ -5,6 +5,7 @@ import apiRoutes from './route/api.js'
 import webRoutes from './route/web.js'
 import userRoutes from './route/user.js'
 import bookRoutes from './route/books.js'
+import cors from "cors";
 import {dbConnect,dbDisconnect} from './config/database.js'
 import path from "path";
 import { fileURLToPath } from "url";
@@ -23,6 +24,7 @@ app.use(express.urlencoded({extended:true}))
 app.use(express.json())
 app.use(cookieParser());
 app.use(reqLogger)
+app.use(cors());
 app.use((req, res, next) => {
     res.setHeader('X-Powered-By', 'NodeJS-Learning');
     next();
