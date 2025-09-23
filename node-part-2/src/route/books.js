@@ -163,7 +163,7 @@ router.post('/',async(req,res) => {
         if(!addedBook){
             return res.status(500).json({message: 'something went wrong while adding book'})
         }
-        return res.status(200,).json(addedBook)
+        return res.status(201).json(addedBook)
         
     } catch (error) {
         console.log(`Books not added due to some error: ${error.message}`)

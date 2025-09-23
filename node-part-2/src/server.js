@@ -8,7 +8,8 @@ import bookRoutes from './route/books.js'
 import {dbConnect,dbDisconnect} from './config/database.js'
 import path from "path";
 import { fileURLToPath } from "url";
-
+import authRoutes from './route/auth.js'
+import cookieParser from 'cookie-parser'
 // i have used the absolute path to load the .env
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,6 +21,7 @@ const app = express()
 
 app.use(express.urlencoded({extended:true}))
 app.use(express.json())
+app.use(cookieParser());
 app.use(reqLogger)
 app.use((req, res, next) => {
     res.setHeader('X-Powered-By', 'NodeJS-Learning');
@@ -31,6 +33,7 @@ app.use('/api/v1',apiRoutes)
 app.use('/',webRoutes)
 app.use('/api/v1/books',bookRoutes)
 app.use('/api/v1/users',userRoutes)
+app.use('/api/v1/auth',authRoutes)
 
 
 app.use((req, res, next) => {
@@ -42,10 +45,6 @@ app.use((req, res, next) => {
 app.get('/',(req,res) => {
     res.status(200).send('Welcome to the Express Server! ')
 })
-
-
-
-    
 
 
 

@@ -56,6 +56,7 @@ describe("API Tests", () => {
         title: "API Test Book",
         author: "API Author",
         year: 2025,
+        isbn: "h",
         genre: "Testing",
         userId,
       });
