@@ -2,9 +2,10 @@ import express from 'express'
 const router = express.Router()
 import User from '../models/user.model.js'
 import bcrypt from 'bcrypt'
+import { requireAuth, optionalAuth, requireOwnership, requireAdmin } from "../middleware/auth.js";
 
-// all users
-router.get('/', async (req, res) => {
+
+router.get('/', requireAdmin, async (req, res) => {
   try {
     const users = await User.find().select('-password')
 
@@ -18,8 +19,8 @@ router.get('/', async (req, res) => {
   }
 })
 
-// single user by id
-router.get('/:id', async (req, res) => {
+
+router.get('/:id', optionalAuth, async (req, res) => {
   try {
     const { id } = req.params
     if (!id) {
@@ -32,13 +33,13 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ message: 'user not found' })
     }
 
-    return res.status(200).json(user) // ✅ return user object directly
+    return res.status(200).json(user)
   } catch (error) {
     return res.status(500).json({ message: `Error fetching user: ${error.message}` })
   }
 })
 
-// create user
+
 router.post('/', async (req, res) => {
   try {
     const { username, password, email, lastName, firstName } = req.body
@@ -57,7 +58,6 @@ router.post('/', async (req, res) => {
       email
     })
 
-
     return res.status(201).json({
       _id: addedUser._id,
       username: addedUser.username,
@@ -72,8 +72,12 @@ router.post('/', async (req, res) => {
   }
 })
 
-// update user
-router.put('/:id', async (req, res) => {
+
+router.put('/:id', requireAuth, async (req, res, next) => {
+  const { id } = req.params
+  req.resource = { ownerId: id }
+  next()
+}, requireOwnership, async (req, res) => {
   try {
     const { id } = req.params
     if (!id) {
@@ -92,8 +96,12 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-// delete user
-router.delete('/:id', async (req, res) => {
+
+router.delete('/:id', requireAuth, async (req, res, next) => {
+  const { id } = req.params
+  req.resource = { ownerId: id }
+  next()
+}, requireOwnership, async (req, res) => {
   try {
     const { id } = req.params
     if (!id) {
