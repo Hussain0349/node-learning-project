@@ -3,14 +3,22 @@ import dotenv from 'dotenv'
 import reqLogger from './middleware/logger.js'
 import apiRoutes from './route/api.js'
 import webRoutes from './route/web.js'
+import userRoutes from './route/user.js'
 import bookRoutes from './route/books.js'
-// because my .env is in root and index.js is in the /src
-dotenv.config({path:
-  '../.env'
-})
+import {dbConnect,dbDisconnect} from './config/database.js'
+import path from "path";
+import { fileURLToPath } from "url";
+
+// i have used the absolute path to load the .env
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
 const PORT = process.env.PORT || 3000
 const app = express()
 
+app.use(express.urlencoded({extended:true}))
 app.use(express.json())
 app.use(reqLogger)
 app.use((req, res, next) => {
@@ -19,10 +27,10 @@ app.use((req, res, next) => {
 });
 
 // routes
-app.use('/api',apiRoutes)
+app.use('/api/v1',apiRoutes)
 app.use('/',webRoutes)
-app.use('/api/books',bookRoutes)
-
+app.use('/api/v1/books',bookRoutes)
+app.use('/api/v1/users',userRoutes)
 
 
 app.use((req, res, next) => {
@@ -47,7 +55,10 @@ app.use((err, req, res, next) => {
 });
 
 
-
-app.listen(PORT,(req,res) => {
+dbConnect().then(() => {
+  app.listen(PORT,(req,res) => {
     console.log(`server is running on ${PORT}`)
 })
+})
+
+export default app

@@ -1,208 +1,274 @@
 import express from 'express'
-import path from 'path'
-import fs from 'fs'
+import Book from '../models/book.model.js'
+import User from '../models/user.model.js'
 const router = express.Router()
 
-const booksFilePath = path.resolve("books.json")
-let books = []
 
+// all the book
+router.get('/',async (req,res) => {
 
-const loadBooks = () => {
     try {
-        if (fs.existsSync(booksFilePath)) {
-            const booksData = fs.readFileSync(booksFilePath, 'utf-8')
-            books = JSON.parse(booksData)
-            console.log("Books have been loaded successfully!")
-        } else {
 
-            fs.writeFileSync(booksFilePath, JSON.stringify([], null, 2));
-            console.log("Created new books.json file")
+        const books = await Book.find()
+
+        if(books.length == 0){
+           return res.status(200).json({
+                message: 'no book added yet'
+            })
         }
+        return res.status(200).json(books)
+        
     } catch (error) {
-        console.log(`Error caught while loading books: ${error.message}`)
-        books = []
-    }
-};
-loadBooks()
-
-
-const saveBooks = () => {
-    try {
-        fs.writeFileSync(booksFilePath, JSON.stringify(books, null, 2))
-        console.log("Books saved successfully!")
-    } catch (error) {
-        console.log(`Error saving books: ${error.message}`)
-    }
-}
-
-
-const generateNewId = () => {
-    if (books.length > 0) {
-        return Math.max(...books.map(book => book.id)) + 1
-    } else {
-        return 1
-    }
-}
-
-
-const validateBook = ({ title, author, year, genre }) => {
-    const errors = []
-    const currentYear = new Date().getFullYear()
-
-    if (!title || typeof title !== "string" || title.trim() === "") {
-        errors.push("Title must be a non-empty string")
-    }
-    if (!author || typeof author !== "string" || author.trim() === "") {
-        errors.push("Author must be a non-empty string")
-    }
-    if (!year || isNaN(year) || year < 1000 || year > currentYear) {
-        errors.push(`Year must be a number between 1000 and ${currentYear}`)
-    }
-    if (genre && (typeof genre !== "string" || genre.trim() === "")) {
-        errors.push("Genre must be a string if provided")
+        console.log(`Error while fetching the books: ${error.message}`)
     }
 
-    return errors
-};
-
-
-router.get("/", (req, res) => {
-    let { sort, order, page, limit } = req.query
-    let result = [...books]
-
-    if (sort) {
-        result.sort((a, b) => {
-            if (a[sort] < b[sort]) return order === "desc" ? 1 : -1
-            if (a[sort] > b[sort]) return order === "desc" ? -1 : 1
-            return 0;
-        });
-    }
-
-    page = parseInt(page) || 1;
-    limit = parseInt(limit) || result.length
-    const start = (page - 1) * limit
-    const end = start + limit
-    const paginated = result.slice(start, end)
-
-    res.status(200).json({
-        page,
-        limit,
-        total: result.length,
-        data: paginated
-    })
 })
 
-router.get("/search", (req, res) => {
-    console.log("search", req.query)
-    const { title, author } = req.query
-    let result = books
 
-    if (title) {
-        result = result.filter(b => b.title.toLowerCase().includes(title.toLowerCase()))
-    }
-    if (author) {
-        result = result.filter(b => b.author.toLowerCase().includes(author.toLowerCase()))
-    }
-
-    if (result.length === 0) {
-        return res.status(404).json({ error: "No matching books found" })
-    }
-
-    res.status(200).json(result)
-});
-
-router.get("/count", (req, res) => {
-    res.status(200).json({ count: books.length })
-});
-
-router.post("/", (req, res, next) => {
-    try {
-        let { title, author, year, genre } = req.body;
-
-        const errors = validateBook({ title, author, year, genre });
-        if (errors.length > 0) {
-            return res.status(400).json({ errors })
+// aggregations pipeline
+router.get('/aggregation', async (req, res) => {
+  try {
+   
+    const booksPerUser = await Book.aggregate([
+      { $group: { _id: '$userId', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 20 },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'user'
         }
+      },
+      { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+      { $project: { count: 1, 'user._id': 1, 'user.username': 1, 'user.email': 1 } }
+    ]);
 
-        if (books.some(b => b.title.toLowerCase() === title.toLowerCase())) {
-            return res.status(400).json({ error: "Book with this title already exists" })
-        }
 
-        let newId = generateNewId()
-        let newBook = {
-            id: newId,
-            title,
-            author,
-            year: parseInt(year),
-            genre: genre || ''
-        };
+    const popularGenres = await Book.aggregate([
+      { $group: { _id: '$genre', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
 
-        books.push(newBook);
-        saveBooks()
-        
-        res.status(201).json({
-            message: 'Book added successfully!',
-            newBook
-        });
-    } catch (err) {
-        next(err)
-    }
-});
 
-router.get('/:id', (req, res) => {
-    let id = parseInt(req.params.id)
-    let book = books.find(b => b.id === id)
-    if (!book) {
-        return res.status(404).json({ error: 'Book not found' })
-    }
-    res.status(200).json(book)
-});
+    const usersWithMostBooks = booksPerUser.map(u => ({
+      userId: u._id,
+      username: u.user?.username || null,
+      email: u.user?.email || null,
+      count: u.count
+    }));
 
-router.put('/:id', (req, res, next) => {
-    try {
-        const bookIndex = books.findIndex(b => b.id === parseInt(req.params.id))
-        if (bookIndex === -1) {
-            return res.status(404).json({ error: 'Book not found' })
-        }
 
-        const { title, author, year, genre } = req.body;
+    const newestBooks = await Book.find().sort({ createdAt: -1 }).limit(10).select('-__v');
+    const newestUsers = await User.find().sort({ createdAt: -1 }).limit(10).select('-password -__v');
 
-        const errors = validateBook({ title, author, year, genre })
-        if (errors.length > 0) {
-            return res.status(400).json({ errors })
-        }
-
-        books[bookIndex] = {
-            id: parseInt(req.params.id),
-            title,
-            author,
-            year: parseInt(year),
-            genre: genre || ''
-        };
-
-        saveBooks(); 
-        
-        res.status(200).json(books[bookIndex]);
-    } catch (err) {
-        next(err)
-    }
-});
-
-router.delete('/:id', (req, res) => {
-    const bookIndex = books.findIndex(b => b.id === parseInt(req.params.id));
-    if (bookIndex === -1) {
-        return res.status(404).json({ error: 'Book not found' })
-    }
-
-    books.splice(bookIndex, 1)
-    saveBooks();
-    
-    res.status(204).send()
+    return res.status(200).json({
+      booksPerUser,
+      popularGenres,
+      usersWithMostBooks,
+      newestBooks,
+      newestUsers
+    });
+  } catch (error) {
+    console.error('Error fetching admin aggregations:', error.message);
+    return res.status(500).json({ message: 'Error fetching aggregations', error: error.message });
+  }
 });
 
 router.use((err, req, res, next) => {
     console.error(err.stack)
     res.status(500).json({ error: "Something went wrong!" })
 });
+
+
+
+router.get('/stats', async (req, res) => {
+  try {
+
+    const totalBooks = await Book.countDocuments();
+
+    const booksByGenre = await Book.aggregate([
+      { $group: { _id: "$genre", count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+
+    const booksByYear = await Book.aggregate([
+      { $group: { _id: "$year", count: { $sum: 1 } } },
+      { $sort: { _id: 1 } } 
+    ]);
+
+
+    const avgYearResult = await Book.aggregate([
+      { $group: { _id: null, avgYear: { $avg: "$year" } } }
+    ]);
+    const avgYear = avgYearResult.length > 0 ? avgYearResult[0].avgYear : null;
+
+    return res.status(200).json({
+      totalBooks,
+      booksByGenre,
+      booksByYear,
+      averagePublicationYear: avgYear
+    });
+  } catch (error) {
+    console.error("Error fetching statistics:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+// return a book based on id
+router.get('/:id',async (req,res) => {
+
+    const {id} = req.params
+    
+    if(!id){
+        return res.status(400).json({
+            message: 'Id is required'
+        })
+    }
+
+    const book = await Book.findById(id)
+
+    if(!book){
+        return res.status(404,'Book not found')
+    }
+    return res.status(200).json({
+        book
+    })
+})
+
+// new added book
+router.post('/',async(req,res) => {
+    try {
+
+        const {title,author,year,genre,isbn,userId} = req.body
+        console.log(title,author,genre)
+        if(!title || !author ||  !year || !genre || !isbn ){
+           return  res.status(400).json({
+                message: 'All data is required'
+            })
+        }
+
+        const addedBook = await Book.create({
+            title,
+            author,
+            year,
+            isbn,
+            userId
+        })
+        addedBook.save()
+        if(!addedBook){
+            return res.status(500).json({message: 'something went wrong while adding book'})
+        }
+        return res.status(200,).json(addedBook)
+        
+    } catch (error) {
+        console.log(`Books not added due to some error: ${error.message}`)
+    }
+})
+
+// update book
+router.put('/:id',async(req,res) => {
+    try {
+
+        const {id} = req.params
+        if(!id){
+            return res.status(400).json({
+                message: 'Id is required'
+            })
+        }
+       const updatedInfo = await Book.findByIdAndUpdate(id,req.body,{new:true})
+       
+       if(!updatedInfo){
+        return res.status(500).json({
+            message: 'something wnet wrong while updaing book'
+        })
+       }
+       
+       return res.status(200).json({
+        data: updatedInfo,
+        message: 'Book updated sucessfully'
+       })
+
+
+    } catch (error) {
+        console.log(`error caught while updating book ${error.message}`)
+    }
+})
+
+// delete a book 
+
+router.delete('/:id',async (req,res) => {
+
+    try {
+        const {id} = req.params
+        if(!id){
+            return res.status(400).json({
+                message: 'id is required'
+            })
+        }
+    
+        const deletedOne = await Book.findByIdAndDelete(id,{new:true})
+    
+        if(!deletedOne){
+            return res.status(500,'error caught while deleting book')
+        }
+    
+        return res.status(200).json({
+            message: 'book delete sucessfully!'
+        })
+    } catch (error) {
+
+        console.log(`something went wrong while deleting the book ${error.message}`)
+        
+    }
+})
+
+router.get('/user/:userId',async (req,res) =>{
+
+    try {
+        const{userId} = req.params
+    
+        if(!userId){
+            return res.status(400).json('id is not given')
+        }
+    
+        const books = await Book.find({userId})
+    
+        if(!books || books.length == 0){
+            return res.status(404).json('This user has no books')
+        }
+        return res.status(200).json({
+            data: books,
+        })
+    } catch (error) {
+        res.status(400).json({
+            message: error.message
+        })
+    }
+
+})
+
+
+
+// book with user info
+router.get('/:id/details', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ message: 'id is required' });
+
+    const book = await Book.findById(id).populate('userId', '-password');
+    if (!book) return res.status(404).json({ message: 'Book not found' });
+
+    return res.status(200).json(book);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching book details', error: error.message });
+  }
+});
+
+
 
 export default router
