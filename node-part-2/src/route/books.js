@@ -2,6 +2,7 @@ import express from 'express'
 import Book from '../models/book.model.js'
 import User from '../models/user.model.js'
 import { requireAuth, optionalAuth, requireOwnership } from "../middleware/auth.js";
+import { validateBook } from '../middleware/validation.js';
 
 const router = express.Router()
 
@@ -113,7 +114,7 @@ router.get('/:id', optionalAuth, async (req,res) => {
 })
 
 
-router.post('/', requireAuth, async(req,res) => {
+router.post('/',validateBook,requireAuth, async(req,res) => {
     try {
         const {title,author,year,genre,isbn} = req.body
         if(!title || !author ||  !year || !genre || !isbn ){

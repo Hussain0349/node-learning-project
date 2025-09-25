@@ -3,6 +3,7 @@ const router = express.Router()
 import User from '../models/user.model.js'
 import bcrypt from 'bcrypt'
 import { requireAuth, optionalAuth, requireOwnership, requireAdmin } from "../middleware/auth.js";
+import { validateRegister } from '../middleware/validation.js';
 
 
 router.get('/', requireAdmin, async (req, res) => {
@@ -40,7 +41,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
 })
 
 
-router.post('/', async (req, res) => {
+router.post('/',validateRegister, async (req, res) => {
   try {
     const { username, password, email, lastName, firstName } = req.body
 
