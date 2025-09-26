@@ -206,4 +206,44 @@ router.get('/:id/details', optionalAuth, async (req, res) => {
   }
 });
 
-export default router
+
+router.get("/recent", optionalAuth, async (req,res)=>{
+  try {
+    const books = await Book.find().sort({ createdAt:-1 }).limit(10);
+    res.status(200).json(books);
+  } catch(err){
+    res.status(500).json({ error:"Error fetching recent books" });
+  }
+});
+
+//  Popular genres
+router.get("/popular", optionalAuth, async (req,res)=>{
+  try {
+    const genres = await Book.aggregate([
+      { $group:{ _id:"$genre", count:{ $sum:1 }}},
+      { $sort:{ count:-1 }},
+      { $limit:5 }
+    ]);
+    res.status(200).json(genres);
+  } catch(err){
+    res.status(500).json({ error:"Error fetching popular genres" });
+  }
+});
+
+//  Recommendations (based on favorite genres)
+router.get("/recommendations", requireAuth, async (req,res)=>{
+  try {
+    const user = req.user;
+    if(!user.preferences || !user.preferences.favoriteGenres?.length){
+      return res.status(200).json({ message:"No preferences set" });
+    }
+    const rec = await Book.find({ genre:{ $in:user.preferences.favoriteGenres } }).limit(10);
+    res.status(200).json(rec);
+  } catch(err){
+    res.status(500).json({ error:"Error fetching recommendations" });
+  }
+});
+
+export default router;
+
+

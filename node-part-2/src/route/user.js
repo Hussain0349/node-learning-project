@@ -120,5 +120,53 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
     return res.status(500).json({ message: `Error deleting user: ${error.message}` })
   }
 })
+authRoutes.delete("/delete-account", requireAuth, async (req,res)=>{
+  try {
+    await Book.deleteMany({ userId: req.user.id });
+    await User.findByIdAndDelete(req.user.id);
+    res.clearCookie("token");
+    return res.status(200).json({ message:"Account and books deleted" });
+  } catch(err){
+    res.status(500).json({ error:"Error deleting account", details:err.message });
+  }
+});
+
+//  Current user books (paginated)
+authRoutes.get("/profile/books", requireAuth, async (req,res)=>{
+  try {
+    const { page=1, limit=10 } = req.query;
+    const books = await Book.find({ userId:req.user.id })
+      .skip((page-1)*limit).limit(parseInt(limit));
+    return res.status(200).json(books);
+  } catch(err){
+    res.status(500).json({ error:"Error fetching books", details:err.message });
+  }
+});
+
+//  Current user stats
+authRoutes.get("/profile/stats", requireAuth, async (req,res)=>{
+  try {
+    const count = await Book.countDocuments({ userId:req.user.id });
+    const byGenre = await Book.aggregate([
+      { $match:{ userId:req.user._id }},
+      { $group:{ _id:"$genre", count:{ $sum:1 }}}
+    ]);
+    return res.status(200).json({ totalBooks:count, booksByGenre:byGenre });
+  } catch(err){
+    res.status(500).json({ error:"Error fetching stats", details:err.message });
+  }
+});
+
+//  Verify token
+authRoutes.post("/verify", (req,res)=>{
+  try{
+    const token = req.cookies?.token || req.headers["authorization"]?.split(" ")[1];
+    if(!token) return res.status(401).json({ valid:false });
+    const decoded = verifyToken(token);
+    return res.status(200).json({ valid:true, user:decoded });
+  }catch(err){
+    return res.status(403).json({ valid:false });
+  }
+});
 
 export default router

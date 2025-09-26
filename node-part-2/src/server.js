@@ -80,6 +80,17 @@ app.get('/',(req,res) => {
     res.status(200).send('Welcome to the Express Server! ')
 })
 
+app.get("/api/v1/health", (req,res)=>{
+  res.status(200).json({ status:"ok", timestamp:new Date() });
+});
+
+app.get("/api/v1/config", (req,res)=>{
+  res.status(200).json({
+    apiVersion:"v1",
+    features:["auth","books","users","recommendations"]
+  });
+});
+
 
 
 app.use((err, req, res, next) => {
