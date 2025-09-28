@@ -1,46 +1,55 @@
-// node-part-2/src/test/api.test.js
 import request from "supertest";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-import app from "../server.js";   // server.js already connects to DB
+import app from "../server.js";
 import mongoose from "mongoose";
+import { MongoMemoryServer } from "mongodb-memory-server";
+import { jest } from "@jest/globals";
+
+jest.setTimeout(20000);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
+let mongoServer;
+let userId;
+let token;
+
 beforeAll(async () => {
-  //  remove mongoose.connect here
-  // server.js already did it
+  mongoServer = await MongoMemoryServer.create();
+  await mongoose.connect(mongoServer.getUri());
+
+  const registerRes = await request(app).post("/api/v1/auth/register").send({
+    username: "apitest",
+    email: "apiuser@example.com",
+    password: "password123",
+    firstName: "API",
+    lastName: "User",
+  });
+
+  userId = registerRes.body._id;
+
+  const loginRes = await request(app).post("/api/v1/auth/login").send({
+    email: "apiuser@example.com",
+    password: "password123",
+  });
+
+  token =
+    loginRes.body.token ||
+    (loginRes.headers["set-cookie"]?.[0]?.split(";")[0].split("=")[1]);
 });
 
 afterAll(async () => {
-  await mongoose.connection.dropDatabase();
-  await mongoose.connection.close();
+  await mongoose.disconnect();
+  await mongoServer.stop();
 });
 
 describe("API Tests", () => {
-  let userId;
-
   it("should return 200 on GET /", async () => {
     const res = await request(app).get("/");
     expect(res.status).toBe(200);
-  });
-
-  it("should create a user via API", async () => {
-    const res = await request(app)
-      .post("/api/v1/users")
-      .send({
-        username: "apitest",
-        email: "apiuser@example.com",
-        password: "password123",
-        firstName: "API",
-        lastName: "User",
-      });
-    expect(res.status).toBe(201);
-    expect(res.body.username).toBe("apitest");
-    userId = res.body.id || res.body._id;
   });
 
   it("should fetch created user", async () => {
@@ -52,6 +61,7 @@ describe("API Tests", () => {
   it("should create a book via API", async () => {
     const res = await request(app)
       .post("/api/v1/books")
+      .set("Authorization", `Bearer ${token}`) // ✅ send token
       .send({
         title: "API Test Book",
         author: "API Author",

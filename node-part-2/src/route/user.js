@@ -120,7 +120,7 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
     return res.status(500).json({ message: `Error deleting user: ${error.message}` })
   }
 })
-authRoutes.delete("/delete-account", requireAuth, async (req,res)=>{
+router.delete("/delete-account", requireAuth, async (req,res)=>{
   try {
     await Book.deleteMany({ userId: req.user.id });
     await User.findByIdAndDelete(req.user.id);
@@ -132,7 +132,7 @@ authRoutes.delete("/delete-account", requireAuth, async (req,res)=>{
 });
 
 //  Current user books (paginated)
-authRoutes.get("/profile/books", requireAuth, async (req,res)=>{
+router.get("/profile/books", requireAuth, async (req,res)=>{
   try {
     const { page=1, limit=10 } = req.query;
     const books = await Book.find({ userId:req.user.id })
@@ -144,7 +144,7 @@ authRoutes.get("/profile/books", requireAuth, async (req,res)=>{
 });
 
 //  Current user stats
-authRoutes.get("/profile/stats", requireAuth, async (req,res)=>{
+router.get("/profile/stats", requireAuth, async (req,res)=>{
   try {
     const count = await Book.countDocuments({ userId:req.user.id });
     const byGenre = await Book.aggregate([
@@ -158,7 +158,7 @@ authRoutes.get("/profile/stats", requireAuth, async (req,res)=>{
 });
 
 //  Verify token
-authRoutes.post("/verify", (req,res)=>{
+router.post("/verify", (req,res)=>{
   try{
     const token = req.cookies?.token || req.headers["authorization"]?.split(" ")[1];
     if(!token) return res.status(401).json({ valid:false });

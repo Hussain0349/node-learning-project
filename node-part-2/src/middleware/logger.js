@@ -1,18 +1,12 @@
+import winston from "winston";
 
-const reqLogger = (req,res,next) => {
+const logger = winston.createLogger({
+  level: "info",
+  format: winston.format.json(),
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: "logs/combined.log" }),
+  ],
+});
 
-    const currentTime = Date.now()
-
-    res.on('finish', () => {
-        const duration = Date.now() - currentTime
-
-        console.log(new Date())
-        console.log(req.method)
-        console.log(req.statusCode)
-        console.log(duration)
-
-    })
-    next()
-
-}
-export default reqLogger
+export default logger;

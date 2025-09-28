@@ -1,31 +1,37 @@
-import mongoose, { disconnect } from "mongoose";
-
-
+import mongoose from "mongoose";
 
 const dbConnect = async () => {
+  try {
+   
+    const uri =
+      process.env.NODE_ENV === "test"
+        ? process.env.TEST_DB_URL || "mongodb://127.0.0.1:27017/testdb"
+        : `${process.env.DB_URL}/${process.env.DB_NAME}`;
 
-    try {
+    await mongoose.connect(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
 
-        const connectionInstance = await mongoose.connect(`${process.env.DB_URL}/${process.env.DB_NAME}`)
-        console.log('database connecedted sucesfully!')
-        
-    } catch (error) {
-        console.log(`Some error is caught while connecting to databse ${error.message}`)
-        process.exit(1)
+    console.log(" Database connected successfully!");
+  } catch (error) {
+    console.log(` Error while connecting to database: ${error.message}`);
+
+    
+    if (process.env.NODE_ENV !== "test") {
+      process.exit(1);
     }
-}
+  }
+};
 
 
-// to stop databse gracefully!
 const dbDisconnect = async () => {
-    try {
+  try {
+    await mongoose.connection.close();
+    console.log(" Database disconnected successfully!");
+  } catch (error) {
+    console.log(` Error while disconnecting database: ${error.message}`);
+  }
+};
 
-        await mongoose.connection.close()
-        console.log('Data base disconnect sucessfully!')
-        
-    } catch (error) {
-        console.log(`Error caught while disconnecting data base ${error.message}`)
-    }
-}
-
-export {dbConnect,dbDisconnect }
+export { dbConnect, dbDisconnect };

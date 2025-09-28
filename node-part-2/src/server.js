@@ -1,6 +1,6 @@
 import express from 'express'
 import dotenv from 'dotenv'
-import reqLogger from './middleware/logger.js'
+import reqLogger from "./middleware/reqLogger.js";  // ✅ not logger.js
 import apiRoutes from './route/api.js'
 import webRoutes from './route/web.js'
 import userRoutes from './route/user.js'
@@ -12,7 +12,7 @@ import { fileURLToPath } from "url";
 import authRoutes from './route/auth.js'
 import cookieParser from 'cookie-parser'
 import helmet from "helmet";
-import cors from "cors";
+
 import rateLimit from "express-rate-limit";
 
 
@@ -99,10 +99,13 @@ app.use((err, req, res, next) => {
 });
 
 
-dbConnect().then(() => {
-  app.listen(PORT,(req,res) => {
-    console.log(`server is running on ${PORT}`)
-})
-})
+if (process.env.NODE_ENV !== "test") {
+  dbConnect().then(() => {
+    app.listen(PORT, () => {
+      console.log(`server is running on ${PORT}`);
+    });
+  });
+}
 
-export default app
+export default app;
+
