@@ -13,7 +13,10 @@
     "db:drop": "node node-part-2/src/script/drop.js",
     "db:reset": "npm run db:drop && npm run db:seed",
     "start": "node node-part-2/src/server.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles --forceExit"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles --forceExit",
+     "docker:build": "docker build -t books-api .",
+  "docker:run": "docker run -p 3000:3000 --env-file .env books-api",
+  "docker:dev": "docker run -p 3000:3000 -v $(pwd):/app books-api npm run dev"
 
   },
   "repository": {
