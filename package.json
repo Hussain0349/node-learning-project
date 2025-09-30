@@ -16,7 +16,8 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles --forceExit",
      "docker:build": "docker build -t books-api .",
   "docker:run": "docker run -p 3000:3000 --env-file .env books-api",
-  "docker:dev": "docker run -p 3000:3000 -v $(pwd):/app books-api npm run dev"
+  "docker:dev": "docker run -p 3000:3000 -v $(pwd):/app books-api npm run dev",
+   "prod-setup": "node script/prod-setup.js"
 
   },
   "repository": {
